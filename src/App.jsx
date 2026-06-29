@@ -1,8 +1,7 @@
-import SetupScreen from "./components/SetupScreen";
-
+import LoadingScreen from "./components/LoadingScreen";
 
 function App() {
-  return <SetupScreen />;
+  return <LoadingScreen />;
 }
 
 export default App;
