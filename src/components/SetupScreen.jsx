@@ -1,5 +1,16 @@
 import React from "react";
 
+const ROLES = [
+  "Frontend Developer",
+  "Full Stack Developer",
+  "Backend Engineer",
+  "React Developer",
+  "Node.js Developer",
+  "Data Scientist",
+  "Product Manager",
+  "DevOps Engineer",
+];
+
 export default function SetupScreen({ role, setRole, onStart, error }) {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
@@ -19,6 +30,22 @@ export default function SetupScreen({ role, setRole, onStart, error }) {
           placeholder="Enter your role"
           className="w-full border rounded-lg px-4 py-3 mb-4"
         />
+
+        <div className="flex flex-wrap gap-2 mb-6">
+          {ROLES.map((r) => (
+            <button
+              key={r}
+              onClick={() => setRole(r)}
+              className={`text-xs px-3 py-1.5 rounded-full border ${
+                role === r
+                  ? "bg-indigo-500 text-white"
+                  : "border-gray-400"
+              }`}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
 
         {error && (
           <p className="text-red-500 mb-3">{error}</p>
