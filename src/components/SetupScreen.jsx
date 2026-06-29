@@ -1,0 +1,36 @@
+import React from "react";
+
+export default function SetupScreen({ role, setRole, onStart, error }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <h1 className="text-4xl font-bold text-center mb-2">
+          AI Interview Coach
+        </h1>
+
+        <p className="text-center text-slate-400 mb-8">
+          Practice interviews with AI.
+        </p>
+
+        <input
+          type="text"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          placeholder="Enter your role"
+          className="w-full border rounded-lg px-4 py-3 mb-4"
+        />
+
+        {error && (
+          <p className="text-red-500 mb-3">{error}</p>
+        )}
+
+        <button
+          onClick={onStart}
+          className="w-full bg-indigo-500 text-white py-3 rounded-lg"
+        >
+          Start Interview
+        </button>
+      </div>
+    </div>
+  );
+}
