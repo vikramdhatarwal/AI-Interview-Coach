@@ -2,7 +2,7 @@ import SetupScreen from "./components/SetupScreen";
 import LoadingScreen from "./components/LoadingScreen";
 import InterviewScreen from "./components/InterviewScreen";
 import { useInterview } from "./hooks/useInterview";
-
+import ResultsScreen from "./components/ResultsScreen";
 function App() {
   const interview = useInterview();
 
@@ -38,7 +38,16 @@ function App() {
     );
   }
 
-  return <div>Results Coming Soon...</div>;
+  if (interview.phase === "result") {
+    return (
+      <ResultsScreen
+        role={interview.role}
+        feedbacks={interview.feedbacks}
+        avgScore={interview.avgScore}
+        onRestart={interview.restart}
+      />
+    );
+  }
 }
 
 export default App;
