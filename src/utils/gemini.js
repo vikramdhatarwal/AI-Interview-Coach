@@ -1,28 +1,17 @@
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_MODEL = "gemini-3.5-flash";
-const BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-
 async function callGemini(prompt) {
-  if (!GEMINI_API_KEY) {
-    throw new Error("Missing VITE_GEMINI_API_KEY. Add it to your .env file.");
-  }
-
-  const res = await fetch(`${BASE_URL}?key=${GEMINI_API_KEY}`, {
+  const res = await fetch("/api/gemini", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
-    }),
+    body: JSON.stringify({ prompt }),
   });
 
+  const data = await res.json();
+
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err?.error?.message || "Gemini API error");
+    throw new Error(data?.error || "Gemini API error");
   }
 
-  const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  return data.text || "";
 }
 
 function parseGeminiJson(raw) {

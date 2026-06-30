@@ -17,6 +17,7 @@ AI Interview MockMate is a Vite + React app that generates role-specific intervi
 - Vite 5
 - Tailwind CSS
 - Google Gemini API
+- Vercel serverless function for API key proxying
 
 ## Project Structure
 
@@ -34,7 +35,9 @@ src/
   hooks/
     useInterview.js               Interview state machine and user actions
   utils/
-    gemini.js                     Gemini API calls and JSON parsing
+    gemini.js                     Frontend calls to the serverless Gemini proxy
+api/
+  gemini.js                       Serverless Gemini proxy; keeps the API key server-side
 ```
 
 ## Getting Started
@@ -56,14 +59,20 @@ npm.cmd install
 Create a `.env` file in the project root:
 
 ```env
-VITE_GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-The app reads this value from `import.meta.env.VITE_GEMINI_API_KEY`.
-
-Important: Vite exposes `VITE_*` variables to the browser bundle. This is fine for local learning/demo projects, but do not ship a production app with a private API key directly in frontend code. Use a backend proxy for production.
+The API key is proxied through the serverless function in `api/gemini.js`. The frontend calls `/api/gemini`, and the serverless function attaches `GEMINI_API_KEY` server-side before calling Gemini.
 
 ### 3. Start the development server
+
+For full local API support, run the app with Vercel's local dev server so `/api/gemini` is available:
+
+```bash
+vercel dev
+```
+
+If you only need to work on frontend UI without calling Gemini, you can still run Vite directly:
 
 ```bash
 npm run dev
@@ -125,7 +134,7 @@ Answer evaluation expects a JSON object:
 
 ### Missing API key
 
-If you see `Missing VITE_GEMINI_API_KEY`, confirm that `.env` exists in the project root and restart the dev server after editing it.
+If you see `Missing GEMINI_API_KEY on the server`, confirm that `.env` exists in the project root, uses `GEMINI_API_KEY`, and restart the dev server after editing it.
 
 ### Invalid JSON from Gemini
 
@@ -137,7 +146,6 @@ If PowerShell says `npm.ps1 cannot be loaded because running scripts is disabled
 
 ## Notes For Future Improvements
 
-- Move Gemini calls to a backend API route before deploying publicly.
 - Add persistence for completed interview sessions.
 - Add difficulty controls and question categories.
 - Add automated tests for `useInterview` and Gemini parsing helpers.
