@@ -62,26 +62,27 @@ Create a `.env` file in the project root:
 GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-The API key is proxied through the serverless function in `api/gemini.js`. The frontend calls `/api/gemini`, and the serverless function attaches `GEMINI_API_KEY` server-side before calling Gemini.
+The API key is proxied through the serverless function in `api/gemini.js`. The frontend calls `/api/gemini`, and the serverless function attaches `GEMINI_API_KEY` server-side before calling Gemini. For local compatibility, the proxy also accepts `VITE_GEMINI_API_KEY`, but `GEMINI_API_KEY` is preferred because the key is not meant to be used directly by browser code.
 
 ### 3. Start the development server
 
-For full local API support, run the app with Vercel's local dev server so `/api/gemini` is available:
+For full local API support, run the app with the project dev server so `/api/gemini` is available:
 
 ```bash
-vercel dev
+npm run dev
 ```
 
 If you only need to work on frontend UI without calling Gemini, you can still run Vite directly:
 
 ```bash
-npm run dev
+npm run dev:vite
 ```
 
 PowerShell alternative:
 
 ```bash
 npm.cmd run dev
+npm.cmd run dev:vite
 ```
 
 ### 4. Build for production
