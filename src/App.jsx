@@ -1,5 +1,5 @@
-import InterviewScreen from "./components/InterviewScreen";
 import { useState } from "react";
+import InterviewScreen from "./components/InterviewScreen";
 
 function App() {
   const [answer, setAnswer] = useState("");
@@ -11,12 +11,13 @@ function App() {
         "Tell me about yourself.",
         "What is React?",
         "Explain the Virtual DOM.",
-        "What are React Hooks?",
-        "Describe a project you built."
       ]}
       currentIndex={0}
       answer={answer}
       setAnswer={setAnswer}
+      onSubmit={() => alert("Answer submitted")}
+      isEvaluating={false}
+      error=""
     />
   );
 }

@@ -6,6 +6,9 @@ export default function InterviewScreen({
   currentIndex,
   answer,
   setAnswer,
+  onSubmit,
+  isEvaluating,
+  error,
 }) {
   const total = questions.length;
   const progress = ((currentIndex + 1) / total) * 100;
@@ -52,6 +55,26 @@ export default function InterviewScreen({
           placeholder="Type your answer..."
           className="w-full bg-[#13131f] border border-slate-700 rounded-xl px-4 py-4 text-white resize-none"
         />
+        {error && (
+          <p className="text-red-400 text-sm font-body mb-3">
+            {error}
+          </p>
+        )}
+
+        <button
+          onClick={onSubmit}
+          disabled={isEvaluating || !answer.trim()}
+          className="w-full bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-display font-600 py-3 rounded-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+        >
+          {isEvaluating ? (
+            <>
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              Evaluating...
+            </>
+          ) : (
+            "Submit Answer →"
+          )}
+        </button>
 
       </div>
     </div>
