@@ -4,6 +4,12 @@ AI Interview MockMate is a React + Vite interview practice application that uses
 
 Author: Vikram Dhatarwal
 
+
+# Live Demo
+
+https://ai-interview-coach-navy-eight.vercel.app/setup
+
+
 ## Project Overview
 
 The application is built as a single-page React app with route-based screens for setup, interview practice, and final results. The browser never calls Gemini directly. Instead, the frontend sends prompts to a local/serverless API proxy at `/api/gemini`, and that proxy attaches the Gemini API key from the server environment before forwarding the request to Google.
