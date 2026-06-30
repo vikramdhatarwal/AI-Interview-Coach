@@ -52,10 +52,10 @@ export default function FeedbackPanel({ feedback, onNext, isLast }) {
   return (
     <div className="fade-up mt-6 space-y-4">
       {/* Show the score first so users immediately understand the evaluation. */}
-      <div className="gradient-border p-5 flex items-center gap-6">
+      <div className="gradient-border p-5 flex flex-col sm:flex-row items-center gap-5 sm:gap-6">
         <ScoreRing score={feedback.score} />
-        <div>
-          <div className={`inline-block text-xs font-display font-600 px-3 py-1 rounded-full border mb-2 ${colors.bg} ${colors.text}`}>
+        <div className="text-center sm:text-left">
+          <div className={`inline-block text-xs font-display font-semibold px-3 py-1 rounded-full border mb-2 ${colors.bg} ${colors.text}`}>
             {feedback.verdict}
           </div>
           <p className="text-slate-400 text-sm font-body leading-relaxed">
@@ -65,8 +65,8 @@ export default function FeedbackPanel({ feedback, onNext, isLast }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4">
-          <div className="text-emerald-400 text-xs font-display font-600 uppercase tracking-wider mb-3">
+        <div className="surface-card bg-emerald-500/5 border-emerald-500/20 p-4">
+          <div className="text-emerald-400 text-xs font-display font-semibold uppercase tracking-wider mb-3">
             Strengths
           </div>
           <ul className="space-y-2">
@@ -79,8 +79,8 @@ export default function FeedbackPanel({ feedback, onNext, isLast }) {
           </ul>
         </div>
 
-        <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
-          <div className="text-amber-400 text-xs font-display font-600 uppercase tracking-wider mb-3">
+        <div className="surface-card bg-amber-500/5 border-amber-500/20 p-4">
+          <div className="text-amber-400 text-xs font-display font-semibold uppercase tracking-wider mb-3">
             Improve
           </div>
           <ul className="space-y-2">
@@ -96,7 +96,7 @@ export default function FeedbackPanel({ feedback, onNext, isLast }) {
 
       <button
         onClick={onNext}
-        className="w-full bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white font-display font-600 py-3 rounded-lg transition-all active:scale-[0.98]"
+        className="primary-button w-full text-white font-display font-semibold py-3 rounded-lg transition-all active:scale-[0.98]"
       >
         {isLast ? "See Final Results ->" : "Next Question ->"}
       </button>

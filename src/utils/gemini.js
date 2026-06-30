@@ -1,5 +1,6 @@
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+const GEMINI_MODEL = "gemini-3.5-flash";
+const BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 async function callGemini(prompt) {
   if (!GEMINI_API_KEY) {
@@ -11,7 +12,7 @@ async function callGemini(prompt) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
+      generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
     }),
   });
 
@@ -34,7 +35,7 @@ function parseGeminiJson(raw) {
   }
 }
 
-export async function generateQuestions(role, count = 5) {
+export async function generateQuestions(role, count = 10) {
   const prompt = `You are an expert technical interviewer. Generate exactly ${count} interview questions for the role: "${role}".
 
 Rules:
@@ -44,7 +45,7 @@ Rules:
 - No numbering, no extra explanation
 
 Return ONLY a JSON array of strings like:
-["Question 1", "Question 2", "Question 3", "Question 4", "Question 5"]`;
+["Question 1", "Question 2", "Question 3"]`;
 
   return parseGeminiJson(await callGemini(prompt));
 }

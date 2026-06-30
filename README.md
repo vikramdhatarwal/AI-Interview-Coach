@@ -5,7 +5,7 @@ AI Interview MockMate is a Vite + React app that generates role-specific intervi
 ## Features
 
 - Role setup screen with quick role suggestions
-- Gemini-generated interview questions
+- Gemini-generated 10-question interview sessions
 - One-question-at-a-time interview flow
 - AI feedback with score, verdict, strengths, improvements, and a stronger answer example
 - Final results screen with average score and per-question breakdown
@@ -90,7 +90,7 @@ npm.cmd run build
 ## App Flow
 
 1. The user enters or selects a target interview role.
-2. `useInterview.startInterview()` asks Gemini for a JSON array of questions.
+2. `useInterview.startInterview()` asks Gemini for a JSON array of 10 questions.
 3. The app moves into the interview screen.
 4. The user answers the current question.
 5. `useInterview.submitAnswer()` asks Gemini to evaluate the answer.
