@@ -3,8 +3,7 @@ import { generateQuestions, evaluateAnswer } from "../utils/gemini";
 
 export function useInterview() {
   const [role, setRole] = useState("");
-  // Valid phases: setup -> loading -> interview -> result.
-  const [phase, setPhase] = useState("setup");
+  const [isStarting, setIsStarting] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -16,11 +15,11 @@ export function useInterview() {
   const startInterview = useCallback(async () => {
     if (!role.trim()) {
       setError("Please enter a job role.");
-      return;
+      return false;
     }
 
     setError("");
-    setPhase("loading");
+    setIsStarting(true);
 
     try {
       const generatedQuestions = await generateQuestions(role);
@@ -34,10 +33,12 @@ export function useInterview() {
       setFeedbacks([]);
       setCurrentFeedback(null);
       setAnswer("");
-      setPhase("interview");
+      return true;
     } catch (e) {
       setError(e.message);
-      setPhase("setup");
+      return false;
+    } finally {
+      setIsStarting(false);
     }
   }, [role]);
 
@@ -67,18 +68,18 @@ export function useInterview() {
 
   const nextQuestion = useCallback(() => {
     if (currentIndex + 1 >= questions.length) {
-      setPhase("result");
-      return;
+      return null;
     }
 
-    setCurrentIndex((index) => index + 1);
+    const nextIndex = currentIndex + 1;
+    setCurrentIndex(nextIndex);
     setAnswer("");
     setCurrentFeedback(null);
     setError("");
+    return nextIndex;
   }, [currentIndex, questions.length]);
 
   const restart = useCallback(() => {
-    setPhase("setup");
     setRole("");
     setQuestions([]);
     setCurrentIndex(0);
@@ -96,7 +97,7 @@ export function useInterview() {
   return {
     role,
     setRole,
-    phase,
+    isStarting,
     questions,
     currentIndex,
     answer,
