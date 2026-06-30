@@ -1,25 +1,42 @@
-import { useState } from "react";
+import SetupScreen from "./components/SetupScreen";
+import LoadingScreen from "./components/LoadingScreen";
 import InterviewScreen from "./components/InterviewScreen";
+import { useInterview } from "./hooks/useInterview";
 
 function App() {
-  const [answer, setAnswer] = useState("");
+  const interview = useInterview();
 
-  return (
-    <InterviewScreen
-      role="Frontend Developer"
-      questions={[
-        "Tell me about yourself.",
-        "What is React?",
-        "Explain the Virtual DOM.",
-      ]}
-      currentIndex={0}
-      answer={answer}
-      setAnswer={setAnswer}
-      onSubmit={() => alert("Answer submitted")}
-      isEvaluating={false}
-      error=""
-    />
-  );
+  if (interview.phase === "setup") {
+    return (
+      <SetupScreen
+        role={interview.role}
+        setRole={interview.setRole}
+        onStart={interview.startInterview}
+        error={interview.error}
+      />
+    );
+  }
+
+  if (interview.phase === "loading") {
+    return <LoadingScreen role={interview.role} />;
+  }
+
+  if (interview.phase === "interview") {
+    return (
+      <InterviewScreen
+        role={interview.role}
+        questions={interview.questions}
+        currentIndex={interview.currentIndex}
+        answer={interview.answer}
+        setAnswer={interview.setAnswer}
+        onSubmit={interview.submitAnswer}
+        isEvaluating={interview.isEvaluating}
+        error={interview.error}
+      />
+    );
+  }
+
+  return <div>Results Coming Soon...</div>;
 }
 
 export default App;
