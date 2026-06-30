@@ -30,6 +30,8 @@ function App() {
         answer={interview.answer}
         setAnswer={interview.setAnswer}
         onSubmit={interview.submitAnswer}
+        onNext={interview.nextQuestion}
+        currentFeedback={interview.currentFeedback}
         isEvaluating={interview.isEvaluating}
         error={interview.error}
       />
