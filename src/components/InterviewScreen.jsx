@@ -14,25 +14,19 @@ export default function InterviewScreen({
   error,
 }) {
   const total = questions.length;
-  const progress = ((currentIndex + 1) / total) * 100;
+  const progress = total > 0 ? ((currentIndex + 1) / total) * 100 : 0;
   const isLast = currentIndex === total - 1;
 
   return (
     <div className="min-h-screen flex flex-col items-center px-4 py-10">
       <div className="w-full max-w-2xl">
-
-        {/* Header */}
         <div className="flex items-center justify-between mb-2">
-          <span className="text-slate-400 text-sm font-body">
-            {role}
-          </span>
-
+          <span className="text-slate-400 text-sm font-body">{role}</span>
           <span className="text-slate-400 text-sm font-body">
             {currentIndex + 1} / {total}
           </span>
         </div>
 
-        {/* Progress */}
         <div className="w-full bg-slate-800 rounded-full h-1 mb-8">
           <div
             className="h-1 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 transition-all duration-500"
@@ -40,7 +34,6 @@ export default function InterviewScreen({
           />
         </div>
 
-        {/* Question */}
         <div className="gradient-border p-6 mb-6">
           <div className="text-xs text-indigo-400 font-display font-600 uppercase tracking-wider mb-3">
             Question {currentIndex + 1}
@@ -51,7 +44,7 @@ export default function InterviewScreen({
           </p>
         </div>
 
-        {/* Answer Area */}
+        {/* Hide the answer form after evaluation so the feedback becomes the next action. */}
         {!currentFeedback && (
           <>
             <textarea
@@ -79,13 +72,12 @@ export default function InterviewScreen({
                   Evaluating...
                 </>
               ) : (
-                "Submit Answer →"
+                "Submit Answer ->"
               )}
             </button>
           </>
         )}
 
-        {/* Feedback */}
         {currentFeedback && (
           <FeedbackPanel
             feedback={currentFeedback}

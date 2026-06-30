@@ -3,7 +3,8 @@ import { generateQuestions, evaluateAnswer } from "../utils/gemini";
 
 export function useInterview() {
   const [role, setRole] = useState("");
-  const [phase, setPhase] = useState("setup"); // setup | loading | interview | result
+  // Valid phases: setup -> loading -> interview -> result.
+  const [phase, setPhase] = useState("setup");
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -17,11 +18,18 @@ export function useInterview() {
       setError("Please enter a job role.");
       return;
     }
+
     setError("");
     setPhase("loading");
+
     try {
-      const qs = await generateQuestions(role);
-      setQuestions(qs);
+      const generatedQuestions = await generateQuestions(role);
+
+      if (!Array.isArray(generatedQuestions) || generatedQuestions.length === 0) {
+        throw new Error("Gemini did not return any interview questions.");
+      }
+
+      setQuestions(generatedQuestions);
       setCurrentIndex(0);
       setFeedbacks([]);
       setCurrentFeedback(null);
@@ -38,12 +46,18 @@ export function useInterview() {
       setError("Write your answer before submitting.");
       return;
     }
+
     setError("");
     setIsEvaluating(true);
+
     try {
-      const fb = await evaluateAnswer(role, questions[currentIndex], answer);
-      setCurrentFeedback(fb);
-      setFeedbacks((prev) => [...prev, { question: questions[currentIndex], answer, feedback: fb }]);
+      // Store the latest feedback separately so the current question can show it immediately.
+      const feedback = await evaluateAnswer(role, questions[currentIndex], answer);
+      setCurrentFeedback(feedback);
+      setFeedbacks((prev) => [
+        ...prev,
+        { question: questions[currentIndex], answer, feedback },
+      ]);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -54,12 +68,13 @@ export function useInterview() {
   const nextQuestion = useCallback(() => {
     if (currentIndex + 1 >= questions.length) {
       setPhase("result");
-    } else {
-      setCurrentIndex((i) => i + 1);
-      setAnswer("");
-      setCurrentFeedback(null);
-      setError("");
+      return;
     }
+
+    setCurrentIndex((index) => index + 1);
+    setAnswer("");
+    setCurrentFeedback(null);
+    setError("");
   }, [currentIndex, questions.length]);
 
   const restart = useCallback(() => {
@@ -75,15 +90,17 @@ export function useInterview() {
 
   const avgScore =
     feedbacks.length > 0
-      ? Math.round(feedbacks.reduce((sum, f) => sum + f.feedback.score, 0) / feedbacks.length)
+      ? Math.round(feedbacks.reduce((sum, item) => sum + item.feedback.score, 0) / feedbacks.length)
       : 0;
 
   return {
-    role, setRole,
+    role,
+    setRole,
     phase,
     questions,
     currentIndex,
-    answer, setAnswer,
+    answer,
+    setAnswer,
     feedbacks,
     currentFeedback,
     error,

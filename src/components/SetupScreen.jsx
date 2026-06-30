@@ -14,7 +14,6 @@ const ROLES = [
 export default function SetupScreen({ role, setRole, onStart, error }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16">
-      {/* Header */}
       <div className="text-center mb-12">
         <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4 py-1.5 text-indigo-400 text-sm font-body mb-6">
           <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
@@ -34,7 +33,6 @@ export default function SetupScreen({ role, setRole, onStart, error }) {
         </p>
       </div>
 
-      {/* Card */}
       <div className="gradient-border w-full max-w-md p-8">
         <label className="block text-sm font-medium text-slate-300 font-body mb-2">
           What role are you interviewing for?
@@ -49,18 +47,19 @@ export default function SetupScreen({ role, setRole, onStart, error }) {
           className="w-full bg-[#0a0a0f] border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-600 font-body text-sm focus:outline-none focus:border-indigo-500 transition-colors mb-4"
         />
 
+        {/* Suggested roles keep setup fast while still allowing custom input. */}
         <div className="flex flex-wrap gap-2 mb-6">
-          {ROLES.map((r) => (
+          {ROLES.map((suggestedRole) => (
             <button
-              key={r}
-              onClick={() => setRole(r)}
+              key={suggestedRole}
+              onClick={() => setRole(suggestedRole)}
               className={`text-xs px-3 py-1.5 rounded-full border font-body transition-all ${
-                role === r
+                role === suggestedRole
                   ? "bg-indigo-500/20 border-indigo-500 text-indigo-300"
                   : "border-slate-700 text-slate-500 hover:border-slate-500 hover:text-slate-300"
               }`}
             >
-              {r}
+              {suggestedRole}
             </button>
           ))}
         </div>
@@ -73,13 +72,12 @@ export default function SetupScreen({ role, setRole, onStart, error }) {
 
         <button
           onClick={onStart}
-          className="w-full bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white font-display font-600 py-3 rounded-lg transition-all active:scale-[0.98]"
+          className="w-full bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white font-display font-600 py-3 rounded-lg transition-all duration-300 ease-out hover:shadow-lg hover:shadow-indigo-500/20 active:scale-[0.98]"
         >
-          Start Interview →
+          Start Interview -&gt;
         </button>
       </div>
 
-      {/* Stats */}
       <div className="flex gap-8 mt-12 text-center">
         {[
           ["5", "Questions"],

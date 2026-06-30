@@ -9,20 +9,22 @@ const VERDICT_COLORS = {
 
 function ScoreRing({ score }) {
   const radius = 40;
-  const circ = 2 * Math.PI * radius;
-  const offset = circ - (score / 10) * circ;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 10) * circumference;
 
   return (
     <div className="flex flex-col items-center">
-      <svg width="100" height="100" viewBox="0 0 100 100">
+      <svg width="100" height="100" viewBox="0 0 100 100" aria-label={`Score ${score} out of 10`}>
         <circle cx="50" cy="50" r={radius} fill="none" stroke="#1e1e2e" strokeWidth="8" />
         <circle
-          cx="50" cy="50" r={radius}
+          cx="50"
+          cy="50"
+          r={radius}
           fill="none"
           stroke="url(#scoreGrad)"
           strokeWidth="8"
           strokeLinecap="round"
-          strokeDasharray={circ}
+          strokeDasharray={circumference}
           strokeDashoffset={offset}
           transform="rotate(-90 50 50)"
           style={{ transition: "stroke-dashoffset 1.2s ease-out" }}
@@ -45,11 +47,11 @@ function ScoreRing({ score }) {
 }
 
 export default function FeedbackPanel({ feedback, onNext, isLast }) {
-  const colors = VERDICT_COLORS[feedback.verdict] || VERDICT_COLORS["Average"];
+  const colors = VERDICT_COLORS[feedback.verdict] || VERDICT_COLORS.Average;
 
   return (
     <div className="fade-up mt-6 space-y-4">
-      {/* Score + verdict */}
+      {/* Show the score first so users immediately understand the evaluation. */}
       <div className="gradient-border p-5 flex items-center gap-6">
         <ScoreRing score={feedback.score} />
         <div>
@@ -62,17 +64,16 @@ export default function FeedbackPanel({ feedback, onNext, isLast }) {
         </div>
       </div>
 
-      {/* Strengths & Improvements */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4">
           <div className="text-emerald-400 text-xs font-display font-600 uppercase tracking-wider mb-3">
-            ✓ Strengths
+            Strengths
           </div>
           <ul className="space-y-2">
-            {feedback.strengths.map((s, i) => (
-              <li key={i} className="text-slate-300 text-sm font-body flex gap-2">
-                <span className="text-emerald-500 mt-0.5 flex-shrink-0">•</span>
-                {s}
+            {feedback.strengths?.map((strength) => (
+              <li key={strength} className="text-slate-300 text-sm font-body flex gap-2">
+                <span className="text-emerald-500 mt-0.5 flex-shrink-0">-</span>
+                {strength}
               </li>
             ))}
           </ul>
@@ -80,13 +81,13 @@ export default function FeedbackPanel({ feedback, onNext, isLast }) {
 
         <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
           <div className="text-amber-400 text-xs font-display font-600 uppercase tracking-wider mb-3">
-            ↑ Improve
+            Improve
           </div>
           <ul className="space-y-2">
-            {feedback.improvements.map((imp, i) => (
-              <li key={i} className="text-slate-300 text-sm font-body flex gap-2">
-                <span className="text-amber-500 mt-0.5 flex-shrink-0">•</span>
-                {imp}
+            {feedback.improvements?.map((improvement) => (
+              <li key={improvement} className="text-slate-300 text-sm font-body flex gap-2">
+                <span className="text-amber-500 mt-0.5 flex-shrink-0">-</span>
+                {improvement}
               </li>
             ))}
           </ul>
@@ -97,7 +98,7 @@ export default function FeedbackPanel({ feedback, onNext, isLast }) {
         onClick={onNext}
         className="w-full bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white font-display font-600 py-3 rounded-lg transition-all active:scale-[0.98]"
       >
-        {isLast ? "See Final Results →" : "Next Question →"}
+        {isLast ? "See Final Results ->" : "Next Question ->"}
       </button>
     </div>
   );

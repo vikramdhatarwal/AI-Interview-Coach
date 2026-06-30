@@ -1,11 +1,13 @@
 import SetupScreen from "./components/SetupScreen";
 import LoadingScreen from "./components/LoadingScreen";
 import InterviewScreen from "./components/InterviewScreen";
-import { useInterview } from "./hooks/useInterview";
 import ResultsScreen from "./components/ResultsScreen";
+import { useInterview } from "./hooks/useInterview";
+
 function App() {
   const interview = useInterview();
 
+  // The hook owns the interview state machine; App only chooses the screen.
   if (interview.phase === "setup") {
     return (
       <SetupScreen
@@ -48,6 +50,8 @@ function App() {
       />
     );
   }
+
+  return null;
 }
 
 export default App;
