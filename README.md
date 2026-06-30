@@ -1,116 +1,214 @@
 # AI Interview MockMate
 
-AI Interview MockMate is a Vite + React app that generates role-specific interview questions with Gemini, evaluates each answer, and summarizes the candidate's performance at the end of the session.
+AI Interview MockMate is a React + Vite interview practice application that uses the Google Gemini API to generate role-specific interview questions, evaluate user answers, and summarize the full practice session.
 
-## Features
+Author: Vikram Dhatarwal
 
-- Role setup screen with quick role suggestions
-- Gemini-generated 10-question interview sessions
+## Project Overview
+
+The application is built as a single-page React app with route-based screens for setup, interview practice, and final results. The browser never calls Gemini directly. Instead, the frontend sends prompts to a local/serverless API proxy at `/api/gemini`, and that proxy attaches the Gemini API key from the server environment before forwarding the request to Google.
+
+This architecture keeps the API key out of browser code while still giving the frontend a simple same-origin API endpoint.
+
+## Main Features
+
+- Role selection screen with quick role suggestions
+- AI-generated interview sessions with 10 questions by default
 - One-question-at-a-time interview flow
-- AI feedback with score, verdict, strengths, improvements, and a stronger answer example
-- Final results screen with average score and per-question breakdown
+- Answer submission and Gemini-based evaluation
+- Feedback with score, verdict, strengths, improvements, and an ideal answer summary
+- Final results screen with average score, top answer, focus area, and question-by-question breakdown
 - Responsive Tailwind CSS interface
+- Local development server that serves both the Vite app and `/api/gemini`
 
-## Tech Stack
+## Technology Stack
 
-- React 18
-- Vite 5
-- Tailwind CSS
-- Google Gemini API
-- Vercel serverless function for API key proxying
+- React 18 for UI
+- React Router for screen routing
+- Vite 5 for development and production builds
+- Tailwind CSS for styling
+- Google Gemini API for question generation and answer evaluation
+- Node HTTP server for local API + Vite middleware
+- Vercel-compatible `api/gemini.js` handler for serverless deployment
 
-## Project Structure
+## Actual Architecture
 
 ```text
-src/
-  App.jsx                         Screen routing based on interview phase
-  main.jsx                        React entry point
-  index.css                       Tailwind CSS entry file
-  components/
-    SetupScreen.jsx               Role input and role suggestions
-    LoadingScreen.jsx             Loading/progress state while questions generate
-    InterviewScreen.jsx           Question, answer, and submit UI
-    FeedbackPanel.jsx             Per-answer feedback UI
-    ResultsScreen.jsx             Final score summary
-  hooks/
-    useInterview.js               Interview state machine and user actions
-  utils/
-    gemini.js                     Frontend calls to the serverless Gemini proxy
-api/
-  gemini.js                       Serverless Gemini proxy; keeps the API key server-side
+Browser
+  |
+  | POST /api/gemini
+  v
+Local dev server or serverless runtime
+  |
+  | Reads GEMINI_API_KEY or VITE_GEMINI_API_KEY from environment
+  | Calls Google Gemini generateContent endpoint
+  v
+Gemini API
+  |
+  | Returns generated text
+  v
+API proxy
+  |
+  | Returns { text: "..." } to the frontend
+  v
+React app parses JSON and updates interview state
 ```
 
-## Getting Started
+## Directory Structure
 
-### 1. Install dependencies
-
-```bash
-npm install
+```text
+.
++-- api/
+|   +-- gemini.js
+|       Serverless-style Gemini proxy. Validates requests, reads the API key,
+|       calls Gemini, normalizes response errors, and returns JSON to the app.
+|
++-- scripts/
+|   +-- dev-server.js
+|       Local development server. Loads .env, mounts /api/gemini, and serves
+|       the Vite React app from the same origin.
+|
++-- src/
+|   +-- App.jsx
+|   |   Defines the application routes: /setup, /interview/:questionId,
+|   |   and /results.
+|   |
+|   +-- main.jsx
+|   |   React entry point.
+|   |
+|   +-- index.css
+|   |   Tailwind entry file plus custom base styles, surfaces, buttons,
+|   |   gradients, and animations.
+|   |
+|   +-- hooks/
+|   |   +-- useInterview.js
+|   |       Main interview state machine. Owns role, questions, current answer,
+|   |       feedback, loading states, errors, navigation actions, and average score.
+|   |
+|   +-- utils/
+|   |   +-- gemini.js
+|   |       Frontend Gemini client. Calls /api/gemini, parses AI JSON output,
+|   |       validates generated questions, and normalizes feedback objects.
+|   |
+|   +-- components/
+|       +-- SetupScreen.jsx
+|       |   Role input screen and suggested role buttons.
+|       |
+|       +-- LoadingScreen.jsx
+|       |   Loading state while Gemini generates questions.
+|       |
+|       +-- InterviewScreen.jsx
+|       |   Current question, answer textarea, submit button, and feedback area.
+|       |
+|       +-- FeedbackPanel.jsx
+|       |   Score ring, verdict, strengths, improvements, and next action.
+|       |
+|       +-- ResultsScreen.jsx
+|           Final summary, average score, top answer, focus area, and breakdown.
+|
++-- index.html
++-- package.json
++-- tailwind.config.js
++-- postcss.config.js
++-- vite.config.js
 ```
 
-On Windows PowerShell, if `npm` is blocked by execution policy, use:
+## Runtime Flow
 
-```bash
-npm.cmd install
+1. The user opens the app and lands on `/setup`.
+2. `SetupScreen` collects a target role, such as `Frontend Developer`.
+3. `useInterview.startInterview()` calls `generateQuestions()` from `src/utils/gemini.js`.
+4. `generateQuestions()` sends a prompt to `/api/gemini`.
+5. `api/gemini.js` forwards the prompt to Gemini and returns the generated text.
+6. The frontend parses the text as a JSON array of questions.
+7. The app navigates to `/interview/1`.
+8. The user writes an answer and submits it.
+9. `useInterview.submitAnswer()` calls `evaluateAnswer()`.
+10. Gemini returns a JSON feedback object.
+11. `FeedbackPanel` shows the score, verdict, strengths, improvements, and ideal answer.
+12. The user moves through the questions.
+13. After the final question, the app navigates to `/results`.
+14. `ResultsScreen` calculates and displays the session summary.
+
+## State Management
+
+The project does not use Redux, Zustand, or a backend database. Interview state is kept in the custom React hook:
+
+```text
+src/hooks/useInterview.js
 ```
 
-### 2. Configure environment variables
+This hook manages:
 
-Create a `.env` file in the project root:
+- Selected role
+- Loading state for question generation
+- Generated questions
+- Current question index
+- Current answer text
+- Per-question feedback
+- Current feedback panel state
+- Error messages
+- Evaluation loading state
+- Average score
+- Start, submit, next, and restart actions
+
+Because state is in memory, refreshing the page resets the current interview session.
+
+## API Proxy
+
+The API endpoint is:
+
+```text
+POST /api/gemini
+```
+
+Request body:
+
+```json
+{
+  "prompt": "Generate interview questions..."
+}
+```
+
+Successful response:
+
+```json
+{
+  "text": "[\"Question 1\", \"Question 2\"]"
+}
+```
+
+The proxy accepts the API key from either:
 
 ```env
-GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_API_KEY=your_key_here
 ```
 
-The API key is proxied through the serverless function in `api/gemini.js`. The frontend calls `/api/gemini`, and the serverless function attaches `GEMINI_API_KEY` server-side before calling Gemini. For local compatibility, the proxy also accepts `VITE_GEMINI_API_KEY`, but `GEMINI_API_KEY` is preferred because the key is not meant to be used directly by browser code.
+or, for local compatibility:
 
-### 3. Start the development server
-
-For full local API support, run the app with the project dev server so `/api/gemini` is available:
-
-```bash
-npm run dev
+```env
+VITE_GEMINI_API_KEY=your_key_here
 ```
 
-If you only need to work on frontend UI without calling Gemini, you can still run Vite directly:
+`GEMINI_API_KEY` is preferred because the key is server-side and should not be treated as a browser-facing Vite variable.
 
-```bash
-npm run dev:vite
+## Gemini Model
+
+The proxy currently uses:
+
+```js
+gemini-3.5-flash
 ```
 
-PowerShell alternative:
+The model is configured in:
 
-```bash
-npm.cmd run dev
-npm.cmd run dev:vite
+```text
+api/gemini.js
 ```
 
-### 4. Build for production
+## Gemini Response Contracts
 
-```bash
-npm run build
-```
-
-PowerShell alternative:
-
-```bash
-npm.cmd run build
-```
-
-## App Flow
-
-1. The user enters or selects a target interview role.
-2. `useInterview.startInterview()` asks Gemini for a JSON array of 10 questions.
-3. The app moves into the interview screen.
-4. The user answers the current question.
-5. `useInterview.submitAnswer()` asks Gemini to evaluate the answer.
-6. `FeedbackPanel` displays the score, verdict, strengths, improvements, and sample stronger answer.
-7. The user advances to the next question.
-8. After the final question, `ResultsScreen` shows the average score and breakdown.
-
-## Gemini Response Formats
-
-Question generation expects a JSON array of strings:
+Question generation expects Gemini to return a JSON array of strings:
 
 ```json
 [
@@ -119,7 +217,7 @@ Question generation expects a JSON array of strings:
 ]
 ```
 
-Answer evaluation expects a JSON object:
+Answer evaluation expects Gemini to return a JSON object:
 
 ```json
 {
@@ -127,26 +225,181 @@ Answer evaluation expects a JSON object:
   "verdict": "Good",
   "strengths": ["Clear example", "Good technical detail"],
   "improvements": ["Add measurable impact", "Mention tradeoffs"],
-  "idealAnswer": "A stronger answer would describe the problem, the action taken, and the measurable result."
+  "idealAnswer": "A stronger answer would describe the problem, action, and measurable result."
+}
+```
+
+The frontend includes defensive parsing for common AI response issues, including fenced JSON blocks, extra surrounding text, missing fields, invalid scores, and non-string list values.
+
+## Installation
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+On Windows PowerShell, if script execution blocks `npm`, use:
+
+```powershell
+npm.cmd install
+```
+
+## Environment Setup
+
+Create a `.env` file in the project root:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+If you already have this variable, the app will also read it locally:
+
+```env
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+After changing `.env`, restart the dev server.
+
+## Development
+
+Run the full local development server:
+
+```bash
+npm run dev
+```
+
+PowerShell:
+
+```powershell
+npm.cmd run dev
+```
+
+This command starts `scripts/dev-server.js`, which serves both:
+
+- React/Vite frontend
+- `/api/gemini` API proxy
+
+For frontend-only work, you can run Vite without the API proxy:
+
+```bash
+npm run dev:vite
+```
+
+PowerShell:
+
+```powershell
+npm.cmd run dev:vite
+```
+
+Do not use `dev:vite` when testing Gemini features, because `/api/gemini` will not be available.
+
+## Production Build
+
+Build the app:
+
+```bash
+npm run build
+```
+
+PowerShell:
+
+```powershell
+npm.cmd run build
+```
+
+Preview the production build:
+
+```bash
+npm run preview
+```
+
+PowerShell:
+
+```powershell
+npm.cmd run preview
+```
+
+## Package Scripts
+
+```json
+{
+  "dev": "node scripts/dev-server.js",
+  "dev:vite": "vite",
+  "build": "vite build",
+  "preview": "vite preview"
 }
 ```
 
 ## Troubleshooting
 
-### Missing API key
-
-If you see `Missing GEMINI_API_KEY on the server`, confirm that `.env` exists in the project root, uses `GEMINI_API_KEY`, and restart the dev server after editing it.
-
-### Invalid JSON from Gemini
-
-The app asks Gemini to return only JSON. If Gemini returns extra text or malformed JSON, the app shows a friendly parsing error. Try submitting again or lower the prompt creativity in `src/utils/gemini.js`.
-
 ### PowerShell blocks npm
 
-If PowerShell says `npm.ps1 cannot be loaded because running scripts is disabled`, use `npm.cmd` commands instead, such as `npm.cmd run dev`.
+Use `npm.cmd` instead:
 
-## Notes For Future Improvements
+```powershell
+npm.cmd run dev
+```
 
-- Add persistence for completed interview sessions.
-- Add difficulty controls and question categories.
-- Add automated tests for `useInterview` and Gemini parsing helpers.
+### Missing GEMINI_API_KEY
+
+Make sure `.env` exists in the project root and contains:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+Then restart the dev server.
+
+### `/api/gemini` returns frontend HTML
+
+This happens when the app is running with the frontend-only Vite server. Stop the server and start the full dev server:
+
+```powershell
+npm.cmd run dev
+```
+
+### Gemini returns invalid JSON
+
+The prompts request JSON-only output, and the frontend tries to recover from fenced JSON or extra text. If parsing still fails, submit again or adjust the prompt in:
+
+```text
+src/utils/gemini.js
+```
+
+### Gemini returns a non-JSON API response
+
+The API proxy reads upstream responses as text first, then parses JSON. If Google returns HTML, an empty response, or another unexpected body, the app displays a more specific error with the HTTP status and a short response preview.
+
+## Deployment Notes
+
+The `api/gemini.js` file follows a Vercel-style serverless function shape:
+
+```js
+export default async function handler(req, res) {}
+```
+
+For Vercel deployment, set `GEMINI_API_KEY` in the project environment variables.
+
+For another hosting provider, make sure:
+
+- Static frontend files from `dist/` are served correctly
+- `POST /api/gemini` is routed to the API handler
+- `GEMINI_API_KEY` is available in the server environment
+
+## Current Limitations
+
+- Interview sessions are not persisted after refresh.
+- There is no authentication or user history.
+- There are no automated tests yet.
+- Question count is controlled in code, not by a UI setting.
+- Gemini availability, quota, and model behavior can affect app responses.
+
+## Future Improvements
+
+- Add session persistence with local storage or a database
+- Add difficulty and question category controls
+- Add automated tests for `useInterview` and Gemini parsing
+- Add export/share options for final feedback
+- Add authentication and user interview history
+- Add model selection through configuration
