@@ -1,10 +1,10 @@
 import React from "react";
 
 const VERDICT_COLORS = {
-  Excellent: { text: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/30" },
-  Good: { text: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/30" },
-  Average: { text: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/30" },
-  "Needs Work": { text: "text-red-400", bg: "bg-red-500/10 border-red-500/30" },
+  Excellent: { text: "text-[#2f655e]", bg: "bg-[#2f655e]/10 border-[#2f655e]/25" },
+  Good: { text: "text-[#356377]", bg: "bg-[#356377]/10 border-[#356377]/25" },
+  Average: { text: "text-[#9a6a27]", bg: "bg-[#d29d65]/15 border-[#d29d65]/40" },
+  "Needs Work": { text: "text-[#a94f38]", bg: "bg-[#a94f38]/10 border-[#a94f38]/25" },
 };
 
 function ScoreRing({ score }) {
@@ -15,7 +15,7 @@ function ScoreRing({ score }) {
   return (
     <div className="flex flex-col items-center">
       <svg width="100" height="100" viewBox="0 0 100 100" aria-label={`Score ${score} out of 10`}>
-        <circle cx="50" cy="50" r={radius} fill="none" stroke="#1e1e2e" strokeWidth="8" />
+        <circle cx="50" cy="50" r={radius} fill="none" stroke="#e6dac8" strokeWidth="8" />
         <circle
           cx="50"
           cy="50"
@@ -31,14 +31,14 @@ function ScoreRing({ score }) {
         />
         <defs>
           <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#6366f1" />
-            <stop offset="100%" stopColor="#06b6d4" />
+            <stop offset="0%" stopColor="#a94f38" />
+            <stop offset="100%" stopColor="#2f655e" />
           </linearGradient>
         </defs>
-        <text x="50" y="45" textAnchor="middle" fill="white" fontSize="22" fontWeight="700" fontFamily="Space Grotesk">
+        <text x="50" y="45" textAnchor="middle" fill="#2f2a25" fontSize="22" fontWeight="700" fontFamily="Space Grotesk">
           {score}
         </text>
-        <text x="50" y="61" textAnchor="middle" fill="#64748b" fontSize="10" fontFamily="Inter">
+        <text x="50" y="61" textAnchor="middle" fill="#78716c" fontSize="10" fontFamily="Inter">
           / 10
         </text>
       </svg>
@@ -58,35 +58,35 @@ export default function FeedbackPanel({ feedback, onNext, isLast }) {
           <div className={`inline-block text-xs font-display font-semibold px-3 py-1 rounded-full border mb-2 ${colors.bg} ${colors.text}`}>
             {feedback.verdict}
           </div>
-          <p className="text-slate-400 text-sm font-body leading-relaxed">
+          <p className="text-stone-600 text-sm font-body leading-relaxed">
             {feedback.idealAnswer}
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="surface-card bg-emerald-500/5 border-emerald-500/20 p-4">
-          <div className="text-emerald-400 text-xs font-display font-semibold uppercase tracking-wider mb-3">
+        <div className="surface-card bg-[#2f655e]/5 border-[#2f655e]/20 p-4">
+          <div className="text-[#2f655e] text-xs font-display font-semibold uppercase tracking-wider mb-3">
             Strengths
           </div>
           <ul className="space-y-2">
             {feedback.strengths?.map((strength) => (
-              <li key={strength} className="text-slate-300 text-sm font-body flex gap-2">
-                <span className="text-emerald-500 mt-0.5 flex-shrink-0">-</span>
+              <li key={strength} className="text-stone-700 text-sm font-body flex gap-2">
+                <span className="text-[#2f655e] mt-0.5 flex-shrink-0">-</span>
                 {strength}
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="surface-card bg-amber-500/5 border-amber-500/20 p-4">
-          <div className="text-amber-400 text-xs font-display font-semibold uppercase tracking-wider mb-3">
+        <div className="surface-card bg-[#d29d65]/10 border-[#d29d65]/30 p-4">
+          <div className="text-[#9a6a27] text-xs font-display font-semibold uppercase tracking-wider mb-3">
             Improve
           </div>
           <ul className="space-y-2">
             {feedback.improvements?.map((improvement) => (
-              <li key={improvement} className="text-slate-300 text-sm font-body flex gap-2">
-                <span className="text-amber-500 mt-0.5 flex-shrink-0">-</span>
+              <li key={improvement} className="text-stone-700 text-sm font-body flex gap-2">
+                <span className="text-[#9a6a27] mt-0.5 flex-shrink-0">-</span>
                 {improvement}
               </li>
             ))}

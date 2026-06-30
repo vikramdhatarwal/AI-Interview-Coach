@@ -15,26 +15,26 @@ export default function SetupScreen({ role, setRole, onStart, error }) {
   return (
     <div className="app-shell min-h-screen flex flex-col items-center justify-center px-4 py-12 sm:py-16">
       <div className="text-center mb-10 fade-up">
-        <div className="inline-flex items-center gap-2 bg-cyan-500/10 border border-cyan-400/20 rounded-full px-4 py-1.5 text-cyan-200 text-sm font-body mb-6 shadow-lg shadow-cyan-950/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-300 animate-pulse"></span>
-          AI-Powered Interview Coach
+        <div className="inline-flex items-center gap-2 bg-white/55 border border-stone-300/80 rounded-full px-4 py-1.5 text-stone-600 text-sm font-body mb-6 shadow-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#2f655e]"></span>
+          Guided interview practice
         </div>
 
-        <h1 className="font-display text-5xl md:text-7xl font-bold text-white leading-tight mb-4">
-          AI Interview
-          <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">
+        <h1 className="font-display text-5xl md:text-7xl font-bold text-stone-900 leading-tight mb-4">
+          Interview
+          <span className="block text-[#a94f38]">
             MockMate
           </span>
         </h1>
 
-        <p className="text-slate-400 text-lg max-w-md mx-auto font-body">
-          Practice real interview questions. Get instant AI feedback on your
-          answers.
+        <p className="text-stone-600 text-lg max-w-md mx-auto font-body">
+          Practice real questions, shape clearer stories, and leave with notes
+          you can actually use.
         </p>
       </div>
 
       <div className="gradient-border w-full max-w-md p-6 sm:p-8 fade-up">
-        <label className="block text-sm font-medium text-slate-300 font-body mb-2">
+        <label className="block text-sm font-medium text-stone-700 font-body mb-2">
           What role are you interviewing for?
         </label>
 
@@ -44,7 +44,7 @@ export default function SetupScreen({ role, setRole, onStart, error }) {
           onChange={(e) => setRole(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && onStart()}
           placeholder="e.g. Full Stack Developer"
-          className="w-full bg-slate-950/70 border border-slate-700/80 rounded-lg px-4 py-3 text-white placeholder-slate-600 font-body text-sm focus:outline-none focus:border-cyan-400 transition-colors mb-4"
+          className="w-full bg-white/80 border border-stone-300 rounded-lg px-4 py-3 text-stone-900 placeholder-stone-400 font-body text-sm focus:outline-none focus:border-[#a94f38] transition-colors mb-4"
         />
 
         {/* Suggested roles keep setup fast while still allowing custom input. */}
@@ -55,8 +55,8 @@ export default function SetupScreen({ role, setRole, onStart, error }) {
               onClick={() => setRole(suggestedRole)}
               className={`text-xs px-3 py-1.5 rounded-full border font-body transition-all ${
                 role === suggestedRole
-                  ? "bg-cyan-500/15 border-cyan-400/60 text-cyan-200 shadow-sm shadow-cyan-950/30"
-                  : "border-slate-700/80 text-slate-500 hover:border-slate-500 hover:text-slate-300 hover:bg-slate-800/40"
+                  ? "bg-[#a94f38]/10 border-[#a94f38]/50 text-[#743625]"
+                  : "border-stone-300 text-stone-500 hover:border-stone-400 hover:text-stone-800 hover:bg-white/70"
               }`}
             >
               {suggestedRole}
@@ -65,7 +65,7 @@ export default function SetupScreen({ role, setRole, onStart, error }) {
         </div>
 
         {error && (
-          <p className="text-red-400 text-sm font-body mb-4">
+          <p className="text-red-700 text-sm font-body mb-4">
             {error}
           </p>
         )}
@@ -81,14 +81,14 @@ export default function SetupScreen({ role, setRole, onStart, error }) {
       <div className="surface-card flex gap-8 mt-8 px-6 py-4 text-center fade-up">
         {[
           ["10", "Questions"],
-          ["AI", "Feedback"],
-          ["Instant", "Results"],
+          ["Guided", "Feedback"],
+          ["Clear", "Results"],
         ].map(([value, label]) => (
           <div key={label}>
-            <div className="font-display text-2xl font-bold text-white">
+            <div className="font-display text-2xl font-bold text-stone-900">
               {value}
             </div>
-            <div className="text-slate-500 text-xs font-body mt-0.5">
+            <div className="text-stone-500 text-xs font-body mt-0.5">
               {label}
             </div>
           </div>
