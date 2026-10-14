@@ -16,6 +16,23 @@ The application is built as a single-page React app with route-based screens for
 
 This architecture keeps the API key out of browser code while still giving the frontend a simple same-origin API endpoint.
 
+## Gemini Evaluation
+
+The Gemini response format was evaluated using a fixed 45-prompt test set
+through GitHub Actions.
+
+- Model: `gemini-3.5-flash`
+- Prompts: 45
+- Iterations: 1
+- Request success rate: 100%
+- JSON validity rate: 100%
+- Schema compliance rate: 100%
+
+The detailed output is uploaded as an artifact by the manually triggered
+`Gemini Evaluation` workflow.
+
+
+
 ## Main Features
 
 - Role selection screen with quick role suggestions
