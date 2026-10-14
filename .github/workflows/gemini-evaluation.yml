@@ -1,0 +1,52 @@
+name: Gemini Evaluation
+
+on:
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: Number of evaluation iterations
+        required: true
+        default: "1"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate evaluation fixtures
+        run: npm run validate:evaluation
+
+      - name: Run Gemini evaluation
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: npm run evaluate -- --iterations=${{ inputs.iterations }}
+
+      - name: Display evaluation summary
+        if: always()
+        shell: bash
+        run: |
+          node -e "const r=require('./evaluation/results.json'); console.log(JSON.stringify({model:r.model,totalResponses:r.totalResponses,successfulResponses:r.successfulResponses,requestSuccessRate:r.requestSuccessRate,jsonValidityRate:r.jsonValidityRate,schemaComplianceRate:r.schemaComplianceRate,iterations:r.iterations}, null, 2))"
+
+      - name: Upload evaluation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gemini-evaluation-results
+          path: evaluation/results.json
+          if-no-files-found: warn

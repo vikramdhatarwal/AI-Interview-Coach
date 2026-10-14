@@ -34,7 +34,7 @@ async function callGemini(prompt) {
   return data.text || "";
 }
 
-function parseGeminiJson(raw) {
+export function parseGeminiJson(raw) {
   const cleaned = raw
     .replace(/```(?:json)?/gi, "")
     .replace(/```/g, "")
@@ -69,7 +69,7 @@ function parseGeminiJson(raw) {
   }
 }
 
-function normalizeQuestionList(value) {
+export function normalizeQuestionList(value) {
   if (!Array.isArray(value)) {
     throw new Error("Gemini did not return a list of interview questions.");
   }
@@ -86,7 +86,7 @@ function normalizeQuestionList(value) {
   return questions;
 }
 
-function normalizeFeedback(value) {
+export function normalizeFeedback(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error("Gemini did not return a valid feedback object.");
   }

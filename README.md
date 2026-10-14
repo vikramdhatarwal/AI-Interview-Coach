@@ -409,3 +409,30 @@ For another hosting provider, make sure:
 - Add export/share options for final feedback
 - Add authentication and user interview history
 - Add model selection through configuration
+
+## Evaluation
+
+The repository includes a reproducible 45-prompt evaluation harness:
+
+```bash
+npm run evaluate -- --iterations=3
+```
+
+Set `GEMINI_API_KEY` in the environment before running it. The harness records
+two metrics in `evaluation/results.json`:
+
+For testing an already-deployed proxy without exposing a local key, set
+`EVALUATION_PROXY_URL` to the deployed `POST /api/gemini` URL instead.
+
+- **JSON validity rate:** the percentage of responses from which the defensive
+  parser extracts valid JSON, excluding failed API requests.
+- **Schema compliance rate:** the percentage of parsed responses that satisfy
+  the application's question or feedback contract after normalization,
+  excluding failed API requests.
+- **Request success rate:** the percentage of prompts for which Gemini returned
+  a response instead of an HTTP or network error.
+
+The prompt set contains 15 question-generation cases and 30 answer-feedback
+cases. Results include each response's iteration, case ID, metric outcomes, and
+any parsing or validation error. Do not commit API keys or sensitive candidate
+answers.
