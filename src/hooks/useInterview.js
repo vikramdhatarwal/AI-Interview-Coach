@@ -11,6 +11,8 @@ export function useInterview() {
   const [currentFeedback, setCurrentFeedback] = useState(null);
   const [error, setError] = useState("");
   const [isEvaluating, setIsEvaluating] = useState(false);
+  const [deferEvaluation, setDeferEvaluation] = useState(false);
+  const [answers, setAnswers] = useState([]);
 
   const startInterview = useCallback(async () => {
     if (!role.trim()) {
@@ -33,6 +35,8 @@ export function useInterview() {
       setFeedbacks([]);
       setCurrentFeedback(null);
       setAnswer("");
+      setDeferEvaluation(false);
+      setAnswers([]);
       return true;
     } catch (e) {
       setError(e.message);
@@ -41,6 +45,36 @@ export function useInterview() {
       setIsStarting(false);
     }
   }, [role]);
+
+  const startInterviewWithQuestions = useCallback((interviewRole, generatedQuestions) => {
+    if (!interviewRole.trim()) {
+      setError("Please enter a job role.");
+      return false;
+    }
+
+    const normalizedQuestions = generatedQuestions
+      .map((question) =>
+        typeof question === "string" ? question : question?.question
+      )
+      .filter((question) => typeof question === "string" && question.trim())
+      .map((question) => question.trim());
+
+    if (normalizedQuestions.length === 0) {
+      setError("No valid interview questions were generated.");
+      return false;
+    }
+
+    setRole(interviewRole.trim());
+    setQuestions(normalizedQuestions);
+    setCurrentIndex(0);
+    setFeedbacks([]);
+    setCurrentFeedback(null);
+    setAnswer("");
+    setError("");
+    setDeferEvaluation(true);
+    setAnswers([]);
+    return true;
+  }, []);
 
   const submitAnswer = useCallback(async () => {
     if (!answer.trim()) {
@@ -52,6 +86,32 @@ export function useInterview() {
     setIsEvaluating(true);
 
     try {
+      if (deferEvaluation) {
+        const updatedAnswers = [...answers];
+        updatedAnswers[currentIndex] = answer.trim();
+        setAnswers(updatedAnswers);
+
+        if (currentIndex + 1 < questions.length) {
+          setCurrentIndex((index) => index + 1);
+          setAnswer("");
+          return false;
+        }
+
+        const evaluatedFeedbacks = await Promise.all(
+          questions.map((question, index) =>
+            evaluateAnswer(role, question, updatedAnswers[index] || "")
+          )
+        );
+        setFeedbacks(
+          questions.map((question, index) => ({
+            question,
+            answer: updatedAnswers[index],
+            feedback: evaluatedFeedbacks[index],
+          }))
+        );
+        return true;
+      }
+
       // Store the latest feedback separately so the current question can show it immediately.
       const feedback = await evaluateAnswer(role, questions[currentIndex], answer);
       setCurrentFeedback(feedback);
@@ -64,7 +124,7 @@ export function useInterview() {
     } finally {
       setIsEvaluating(false);
     }
-  }, [answer, role, questions, currentIndex]);
+  }, [answer, role, questions, currentIndex, deferEvaluation, answers]);
 
   const nextQuestion = useCallback(() => {
     if (currentIndex + 1 >= questions.length) {
@@ -76,6 +136,8 @@ export function useInterview() {
     setAnswer("");
     setCurrentFeedback(null);
     setError("");
+    setDeferEvaluation(false);
+    setAnswers([]);
     return nextIndex;
   }, [currentIndex, questions.length]);
 
@@ -106,8 +168,10 @@ export function useInterview() {
     currentFeedback,
     error,
     isEvaluating,
+    deferEvaluation,
     avgScore,
     startInterview,
+    startInterviewWithQuestions,
     submitAnswer,
     nextQuestion,
     restart,

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 const VERDICT_COLOR = {
   Excellent: "text-[#2f655e]",
@@ -57,6 +57,7 @@ function getFocusArea(feedbacks) {
 }
 
 export default function ResultsScreen({ feedbacks, avgScore, role, onRestart }) {
+  const [selectedReview, setSelectedReview] = useState(null);
   const overall = getOverallVerdict(avgScore);
   const topFeedback = getTopFeedback(feedbacks);
   const focusArea = getFocusArea(feedbacks);
@@ -168,7 +169,13 @@ export default function ResultsScreen({ feedbacks, avgScore, role, onRestart }) 
 
           <div className="grid gap-3 md:grid-cols-2">
             {feedbacks.map((item, index) => (
-              <div key={`${item.question}-${index}`} className="surface-card p-4">
+              <button
+                key={`${item.question}-${index}`}
+                type="button"
+                onClick={() => setSelectedReview(item)}
+                className="surface-card w-full p-4 text-left transition-all hover:-translate-y-0.5 hover:border-[#a94f38]/35 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#a94f38]/40"
+                aria-label={`Review question ${index + 1}`}
+              >
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex items-start gap-3 min-w-0">
                     <div className="w-8 h-8 rounded-lg bg-[#a94f38]/10 border border-[#a94f38]/20 flex items-center justify-center text-[#a94f38] font-display text-sm font-semibold flex-shrink-0">
@@ -194,10 +201,104 @@ export default function ResultsScreen({ feedbacks, avgScore, role, onRestart }) 
                     {item.feedback.verdict}
                   </span>
                 </div>
-              </div>
+                <div className="mt-3 text-xs font-semibold text-[#a94f38]">
+                  Click to review full answer
+                </div>
+              </button>
             ))}
           </div>
         </div>
+
+        {selectedReview && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/35 px-4 py-6 backdrop-blur-sm"
+            role="presentation"
+            onClick={() => setSelectedReview(null)}
+          >
+            <section
+              className="gradient-border max-h-[90vh] w-full max-w-2xl overflow-y-auto p-6 sm:p-8 fade-up"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="review-dialog-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-6 flex items-start justify-between gap-4">
+                <div>
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#2f655e]">
+                    Full answer review
+                  </div>
+                  <h3 id="review-dialog-title" className="font-display text-2xl font-bold text-stone-900">
+                    {selectedReview.feedback.verdict}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedReview(null)}
+                  className="quiet-button rounded-lg px-3 py-2 text-sm font-semibold"
+                  aria-label="Close answer review"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="space-y-5">
+                <div className="surface-card p-4">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-stone-500">
+                    Question
+                  </div>
+                  <p className="leading-7 text-stone-800">{selectedReview.question}</p>
+                </div>
+
+                <div className="surface-card p-4">
+                  <div className="mb-2 flex items-center justify-between gap-4">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-stone-500">
+                      Your answer
+                    </div>
+                    <div className="font-display text-2xl font-bold text-[#a94f38]">
+                      {selectedReview.feedback.score}/10
+                    </div>
+                  </div>
+                  <p className="whitespace-pre-wrap leading-7 text-stone-700">
+                    {selectedReview.answer || "No answer recorded."}
+                  </p>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="surface-card border-[#2f655e]/20 bg-[#2f655e]/5 p-4">
+                    <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#2f655e]">
+                      Strengths
+                    </div>
+                    <ul className="space-y-2 text-sm leading-6 text-stone-700">
+                      {selectedReview.feedback.strengths?.map((strength) => (
+                        <li key={strength}>- {strength}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="surface-card border-[#d29d65]/30 bg-[#d29d65]/10 p-4">
+                    <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#9a6a27]">
+                      Weak spots & improvements
+                    </div>
+                    <ul className="space-y-2 text-sm leading-6 text-stone-700">
+                      {selectedReview.feedback.improvements?.map((improvement) => (
+                        <li key={improvement}>- {improvement}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="surface-card p-4">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-stone-500">
+                    Stronger answer direction
+                  </div>
+                  <p className="leading-7 text-stone-700">
+                    {selectedReview.feedback.idealAnswer}
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-3">
           <button

@@ -12,6 +12,7 @@ export default function InterviewScreen({
   isEvaluating,
   currentFeedback,
   error,
+  deferEvaluation,
 }) {
   const total = questions.length;
   const progress = total > 0 ? ((currentIndex + 1) / total) * 100 : 0;
@@ -45,7 +46,7 @@ export default function InterviewScreen({
         </div>
 
         {/* Hide the answer form after evaluation so the feedback becomes the next action. */}
-        {!currentFeedback && (
+        {(!currentFeedback || deferEvaluation) && (
           <>
             <textarea
               value={answer}
@@ -72,7 +73,11 @@ export default function InterviewScreen({
                   Evaluating...
                 </>
               ) : (
-                "Submit Answer ->"
+                deferEvaluation
+                  ? isLast
+                    ? "Submit Interview ->"
+                    : "Save Answer & Next ->"
+                  : "Submit Answer ->"
               )}
             </button>
           </>

@@ -3,7 +3,6 @@ import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer as createViteServer } from "vite";
-import geminiHandler from "../api/gemini.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
@@ -89,7 +88,19 @@ function createApiResponse(res) {
 async function handleApiRequest(req, res) {
   try {
     req.body = await readJsonBody(req);
-    await geminiHandler(req, createApiResponse(res));
+    const handlers = {
+      "/api/gemini": geminiHandler,
+      "/api/ingest-job": ingestJobHandler,
+      "/api/generate-questions": generateQuestionsHandler,
+    };
+    const handler = handlers[new URL(req.url || "/", `http://${req.headers.host || "localhost"}`).pathname];
+
+    if (!handler) {
+      createApiResponse(res).status(404).json({ error: "API route not found." });
+      return;
+    }
+
+    await handler(req, createApiResponse(res));
   } catch (error) {
     createApiResponse(res).status(400).json({
       error: error.message || "Invalid API request.",
@@ -98,6 +109,12 @@ async function handleApiRequest(req, res) {
 }
 
 loadEnvFile();
+
+const { default: geminiHandler } = await import("../api/gemini.js");
+const { default: ingestJobHandler } = await import("../api/ingest-job.js");
+const { default: generateQuestionsHandler } = await import(
+  "../api/generate-questions.js"
+);
 
 const vite = await createViteServer({
   root,
@@ -108,7 +125,11 @@ const vite = await createViteServer({
 const server = http.createServer((req, res) => {
   const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
 
-  if (url.pathname === "/api/gemini") {
+  if (
+    url.pathname === "/api/gemini" ||
+    url.pathname === "/api/ingest-job" ||
+    url.pathname === "/api/generate-questions"
+  ) {
     handleApiRequest(req, res);
     return;
   }
@@ -118,5 +139,7 @@ const server = http.createServer((req, res) => {
 
 server.listen(port, () => {
   console.log(`Local dev server running at http://localhost:${port}`);
-  console.log("Vite UI and /api/gemini are served from the same origin.");
+  console.log(
+    "Vite UI and Gemini/RAG API routes are served from the same origin."
+  );
 });

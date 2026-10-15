@@ -12,9 +12,9 @@ https://ai-interview-coach-navy-eight.vercel.app/setup
 
 ## Project Overview
 
-The application is built as a single-page React app with route-based screens for setup, interview practice, and final results. The browser never calls Gemini directly. Instead, the frontend sends prompts to a local/serverless API proxy at `/api/gemini`, and that proxy attaches the Gemini API key from the server environment before forwarding the request to Google.
+The application is built as a single-page React app with setup, interview practice, and final results screens. Users can choose either a role-based interview or a job-description-grounded interview. The browser never calls Gemini or Supabase directly with server credentials; requests go through server-side API handlers.
 
-This architecture keeps the API key out of browser code while still giving the frontend a simple same-origin API endpoint.
+This architecture keeps Gemini and Supabase service credentials out of browser code while giving the frontend same-origin API endpoints.
 
 ## Gemini Evaluation
 
@@ -36,13 +36,17 @@ The detailed output is uploaded as an artifact by the manually triggered
 ## Main Features
 
 - Role selection screen with quick role suggestions
-- AI-generated interview sessions with 10 questions by default
+- Role-based interviews with 10 generated questions
+- Job-description RAG interviews with 5 retrieved-context questions
+- Job-description chunking, Gemini embeddings, and Supabase pgvector storage
+- Similarity retrieval to ground generated questions in job requirements
 - One-question-at-a-time interview flow
-- Answer submission and Gemini-based evaluation
+- Gemini-based answer evaluation with scores and weak-spot feedback
+- End-of-session evaluation for RAG interviews after all five answers are submitted
 - Feedback with score, verdict, strengths, improvements, and an ideal answer summary
-- Final results screen with average score, top answer, focus area, and question-by-question breakdown
+- Final results screen with average score, top answer, focus area, and clickable full question reviews
 - Responsive Tailwind CSS interface
-- Local development server that serves both the Vite app and `/api/gemini`
+- Local development server that serves the Vite app and all Gemini/RAG API routes
 
 ## Technology Stack
 
@@ -51,30 +55,31 @@ The detailed output is uploaded as an artifact by the manually triggered
 - Vite 5 for development and production builds
 - Tailwind CSS for styling
 - Google Gemini API for question generation and answer evaluation
+- Gemini Embeddings API for job-description vectors
+- Supabase PostgreSQL with pgvector for vector storage and similarity search
 - Node HTTP server for local API + Vite middleware
-- Vercel-compatible `api/gemini.js` handler for serverless deployment
+- Vercel-compatible serverless API handlers
 
 ## Actual Architecture
 
 ```text
 Browser
   |
-  | POST /api/gemini
+  | Role interview: POST /api/gemini
+  | RAG ingestion: POST /api/ingest-job
+  | RAG generation: POST /api/generate-questions
   v
-Local dev server or serverless runtime
+Local dev server or Vercel serverless runtime
   |
-  | Reads GEMINI_API_KEY or VITE_GEMINI_API_KEY from environment
-  | Calls Google Gemini generateContent endpoint
-  v
-Gemini API
+  +--> Gemini API
+  |      +--> Question generation and answer evaluation
+  |      +--> Gemini embeddings
   |
-  | Returns generated text
-  v
-API proxy
+  +--> Supabase pgvector
+         +--> Stores job-description chunks and embeddings
+         +--> Retrieves top matching passages
   |
-  | Returns { text: "..." } to the frontend
-  v
-React app parses JSON and updates interview state
+  +--> Grounded Gemini prompt
 ```
 
 ## Directory Structure
@@ -85,11 +90,15 @@ React app parses JSON and updates interview state
 |   +-- gemini.js
 |       Serverless-style Gemini proxy. Validates requests, reads the API key,
 |       calls Gemini, normalizes response errors, and returns JSON to the app.
+|   +-- ingest-job.js
+|       Chunks a job description, creates embeddings, and stores vectors.
+|   +-- generate-questions.js
+|       Retrieves similar job-description chunks and generates grounded questions.
 |
 +-- scripts/
 |   +-- dev-server.js
-|       Local development server. Loads .env, mounts /api/gemini, and serves
-|       the Vite React app from the same origin.
+|       Local development server. Loads .env, mounts Gemini/RAG API handlers,
+|       and serves the Vite React app from the same origin.
 |
 +-- src/
 |   +-- App.jsx
@@ -115,7 +124,10 @@ React app parses JSON and updates interview state
 |   |
 |   +-- components/
 |       +-- SetupScreen.jsx
-|       |   Role input screen and suggested role buttons.
+|       |   Unified setup screen for role-based or job-description interviews.
+|       |
+|       +-- JobRAGForm.jsx
+|       |   Job-description input, indexing status, and RAG interview setup.
 |       |
 |       +-- LoadingScreen.jsx
 |       |   Loading state while Gemini generates questions.
@@ -138,20 +150,26 @@ React app parses JSON and updates interview state
 
 ## Runtime Flow
 
-1. The user opens the app and lands on `/setup`.
-2. `SetupScreen` collects a target role, such as `Frontend Developer`.
-3. `useInterview.startInterview()` calls `generateQuestions()` from `src/utils/gemini.js`.
-4. `generateQuestions()` sends a prompt to `/api/gemini`.
-5. `api/gemini.js` forwards the prompt to Gemini and returns the generated text.
-6. The frontend parses the text as a JSON array of questions.
-7. The app navigates to `/interview/1`.
-8. The user writes an answer and submits it.
-9. `useInterview.submitAnswer()` calls `evaluateAnswer()`.
-10. Gemini returns a JSON feedback object.
-11. `FeedbackPanel` shows the score, verdict, strengths, improvements, and ideal answer.
-12. The user moves through the questions.
-13. After the final question, the app navigates to `/results`.
-14. `ResultsScreen` calculates and displays the session summary.
+### Role-based interview
+
+1. The user selects **Role-based interview** and enters a target role.
+2. `useInterview.startInterview()` requests 10 questions through `/api/gemini`.
+3. The app parses and validates the JSON question list.
+4. The user answers one question at a time.
+5. Each answer is evaluated immediately and shown in `FeedbackPanel`.
+6. The final results screen summarizes the session.
+
+### Job-description RAG interview
+
+1. The user selects **Job description (RAG)** and enters a target role.
+2. The user pastes a job description and submits it to `/api/ingest-job`.
+3. The server chunks the text, creates Gemini embeddings, and stores each chunk in Supabase pgvector under a new document ID.
+4. `/api/generate-questions` embeds a retrieval query and calls the `match_job_chunks` Supabase RPC.
+5. The retrieved passages are added to a grounded Gemini prompt.
+6. Five generated questions are passed into the same interview route as the role-based flow.
+7. The user submits all five answers without seeing intermediate scores.
+8. Gemini evaluates all five answers after the final submission.
+9. The results screen shows the overall review and clickable full reviews for every question.
 
 ## State Management
 
@@ -173,9 +191,10 @@ This hook manages:
 - Error messages
 - Evaluation loading state
 - Average score
+- Interview mode and deferred answer collection for RAG sessions
 - Start, submit, next, and restart actions
 
-Because state is in memory, refreshing the page resets the current interview session.
+Because interview state is in memory, refreshing the page resets the current interview session. Indexed job-description chunks remain in Supabase after a refresh.
 
 ## API Proxy
 
@@ -274,15 +293,41 @@ Create a `.env` file in the project root:
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
-If you already have this variable, the app will also read it locally:
+`GEMINI_API_KEY`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY` are server-side
+variables. Do not prefix them with `VITE_`, expose them through
+`import.meta.env`, or commit `.env`. After changing `.env`, restart the dev
+server.
 
-```env
-VITE_GEMINI_API_KEY=your_gemini_api_key_here
+## RAG Database Setup
+
+The RAG flow requires a Supabase project with the `vector` extension, a
+`job_chunks` table, and a `match_job_chunks` RPC function. The embedding model
+currently returns 3072-dimensional vectors, so the table and function must use
+`vector(3072)`.
+
+The table needs these fields:
+
+```text
+document_id uuid
+user_id text
+chunk_index integer
+content text
+embedding vector(3072)
+metadata jsonb
+created_at timestamptz
 ```
 
-After changing `.env`, restart the dev server.
+The `match_job_chunks` function should filter by `document_id`, order by cosine
+distance using `<=>`, and return the most relevant chunks. The server expects
+the RPC parameters `query_embedding`, `match_document_id`, and `match_count`.
+
+Each ingestion creates a new document ID. Re-entering the same job description
+currently creates another set of chunks and embeddings; content-hash
+deduplication and automatic cleanup are not implemented yet.
 
 ## Development
 
@@ -302,6 +347,8 @@ This command starts `scripts/dev-server.js`, which serves both:
 
 - React/Vite frontend
 - `/api/gemini` API proxy
+- `/api/ingest-job` RAG ingestion
+- `/api/generate-questions` retrieval and grounded generation
 
 For frontend-only work, you can run Vite without the API proxy:
 
@@ -350,7 +397,9 @@ npm.cmd run preview
   "dev": "node scripts/dev-server.js",
   "dev:vite": "vite",
   "build": "vite build",
-  "preview": "vite preview"
+  "preview": "vite preview",
+  "evaluate": "node evaluation/run-evaluation.js",
+  "validate:evaluation": "node evaluation/validate.js"
 }
 ```
 
@@ -373,6 +422,30 @@ GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 Then restart the dev server.
+
+### Supabase URL or service key errors
+
+Make sure `.env` contains:
+
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
+
+The custom local server loads `.env` before importing the Supabase API
+handlers. Restart `npm run dev` after changing either value.
+
+### Embedding dimension mismatch
+
+If Supabase reports an error such as `expected 768 dimensions, not 3072`,
+update the `job_chunks.embedding` column and `match_job_chunks` function to
+use `vector(3072)`, matching the current `gemini-embedding-001` response.
+
+### Missing `job_chunks` table or `match_job_chunks` RPC
+
+Run the RAG database setup SQL in the Supabase SQL editor. The ingestion route
+cannot store vectors and the generation route cannot retrieve context until
+both the table and RPC function exist.
 
 ### `/api/gemini` returns frontend HTML
 
@@ -403,20 +476,23 @@ export default async function handler(req, res) {}
 ```
 
 For Vercel deployment, set `GEMINI_API_KEY` in the project environment variables.
+For the RAG flow, also set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`.
 
 For another hosting provider, make sure:
 
 - Static frontend files from `dist/` are served correctly
 - `POST /api/gemini` is routed to the API handler
+- `POST /api/ingest-job` and `POST /api/generate-questions` are routed to their handlers
 - `GEMINI_API_KEY` is available in the server environment
+- Supabase server variables are available in the server environment
 
 ## Current Limitations
 
 - Interview sessions are not persisted after refresh.
 - There is no authentication or user history.
-- There are no automated tests yet.
 - Question count is controlled in code, not by a UI setting.
 - Gemini availability, quota, and model behavior can affect app responses.
+- Re-indexing the same job description creates duplicate chunks because content-hash deduplication is not implemented.
 
 ## Future Improvements
 

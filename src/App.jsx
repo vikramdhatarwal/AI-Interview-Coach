@@ -6,20 +6,39 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
+import { useEffect, useState } from "react";
 import SetupScreen from "./components/SetupScreen";
 import LoadingScreen from "./components/LoadingScreen";
 import InterviewScreen from "./components/InterviewScreen";
 import ResultsScreen from "./components/ResultsScreen";
 import { useInterview } from "./hooks/useInterview";
+import JobRAGForm from "./components/JobRAGForm";
 
 function SetupRoute({ interview }) {
   const navigate = useNavigate();
+  const [mode, setMode] = useState("role");
+  const [shouldNavigateToInterview, setShouldNavigateToInterview] = useState(false);
+
+  useEffect(() => {
+    if (shouldNavigateToInterview && interview.questions.length > 0) {
+      navigate("/interview/1", { replace: true });
+      setShouldNavigateToInterview(false);
+    }
+  }, [interview.questions.length, navigate, shouldNavigateToInterview]);
 
   async function handleStart() {
     const started = await interview.startInterview();
 
     if (started) {
-      navigate("/interview/1");
+      setShouldNavigateToInterview(true);
+    }
+  }
+
+  function handleRagInterviewReady(interviewRole, questions) {
+    const started = interview.startInterviewWithQuestions(interviewRole, questions);
+
+    if (started) {
+      setShouldNavigateToInterview(true);
     }
   }
 
@@ -28,13 +47,44 @@ function SetupRoute({ interview }) {
   }
 
   return (
-    <SetupScreen
-      role={interview.role}
-      setRole={interview.setRole}
-      onStart={handleStart}
-      error={interview.error}
-    />
+    <>
+      <div className="app-shell px-4 pt-8 sm:pt-10">
+        <div className="mx-auto flex w-full max-w-md rounded-xl border border-stone-300/80 bg-white/55 p-1 shadow-sm">
+          {[
+            ["role", "Role-based interview"],
+            ["job", "Job description (RAG)"],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setMode(value)}
+              className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition-all sm:text-sm ${
+                mode === value
+                  ? "bg-[#a94f38] text-white shadow-sm"
+                  : "text-stone-500 hover:bg-white/70 hover:text-stone-800"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {mode === "role" ? (
+        <SetupScreen
+          role={interview.role}
+          setRole={interview.setRole}
+          onStart={handleStart}
+          error={interview.error}
+        />
+      ) : (
+        <RagRoute interview={interview} onInterviewReady={handleRagInterviewReady} />
+      )}
+    </>
   );
+}
+
+function RagRoute({ onInterviewReady }) {
+  return <JobRAGForm onInterviewReady={onInterviewReady} />;
 }
 
 function InterviewRoute({ interview }) {
@@ -66,6 +116,14 @@ function InterviewRoute({ interview }) {
     navigate(`/interview/${nextIndex + 1}`);
   }
 
+  async function handleSubmit() {
+    const completed = await interview.submitAnswer();
+
+    if (interview.deferEvaluation && completed) {
+      navigate("/results");
+    }
+  }
+
   return (
     <InterviewScreen
       role={interview.role}
@@ -73,11 +131,12 @@ function InterviewRoute({ interview }) {
       currentIndex={interview.currentIndex}
       answer={interview.answer}
       setAnswer={interview.setAnswer}
-      onSubmit={interview.submitAnswer}
+      onSubmit={handleSubmit}
       onNext={handleNext}
       currentFeedback={interview.currentFeedback}
       isEvaluating={interview.isEvaluating}
       error={interview.error}
+      deferEvaluation={interview.deferEvaluation}
     />
   );
 }
@@ -111,6 +170,10 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Navigate to="/setup" replace />} />
       <Route path="/setup" element={<SetupRoute interview={interview} />} />
+      <Route
+        path="/rag"
+        element={<Navigate to="/setup" replace />}
+      />
       <Route
         path="/interview/:questionId"
         element={<InterviewRoute interview={interview} />}
